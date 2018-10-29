@@ -3,6 +3,8 @@
 Go binary to get a GitHub App ephemeral Installation token for a repository to allow
 git `clone` / `pull` etc operations over https.
 
+This is to simplify the steps detailed in [authenticating-with-github-apps](https://developer.github.com/apps/building-github-apps/authenticating-with-github-apps/)
+
 ## Usage:
 ```bash
 ./github-insttoken \
