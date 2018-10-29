@@ -30,23 +30,23 @@ then
   exit 1
 fi
 
-# check clone has same commit point as upstream master
-git fetch upstream master
+# check clone has same commit point as origin master
+git fetch origin master
 
 CLONE_MASTER_COMMIT=$(git show-ref refs/heads/master | awk '{print $1;}')
-UPSTREAM_MASTER_COMMIT=$(git ls-remote upstream master | awk '{print $1;}')
+ORIGIN_MASTER_COMMIT=$(git ls-remote origin master | awk '{print $1;}')
 
-if [ "$CLONE_MASTER_COMMIT" != "$UPSTREAM_MASTER_COMMIT" ]
+if [ "$CLONE_MASTER_COMMIT" != "$ORIGIN_MASTER_COMMIT" ]
 then
-  echo "ERROR: Your clone master must be at the same commit point as upstream master" >&2
+  echo "ERROR: Your clone master must be at the same commit point as origin master" >&2
   exit 1
 fi
 
 echo "Tagging master as $TAG"
 git tag -a $TAG -m "$COMMENT"
 
-echo "Pushing tag $TAG upstream"
-git push upstream $TAG
+echo "Pushing tag $TAG origin"
+git push origin $TAG
 
 echo "Releasing to github..."
 goreleaser --rm-dist
