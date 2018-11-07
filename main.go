@@ -19,6 +19,7 @@ func main() {
 	appIDStr := flag.String("app-id", "", "GitHub Application ID")
 	gitURL := flag.String("git-url", "https://api.github.com", "Github api base usr (ent: https://github.example.com/api/v3/)")
 	repo := flag.String("repo", "", "GitHub repository (owner/project)")
+	jwtOnly := flag.Bool("jwt-only", false, "Only generate the JWT (workaround for proxy issue)")
 	flag.Parse()
 
 	if *privateKey == "" {
@@ -29,11 +30,11 @@ func main() {
 		panic("app-id is required")
 	}
 
-	if *repo == "" {
+	if !*jwtOnly && *repo == "" {
 		panic("repo is required")
 	}
 
-	if *gitURL == "" {
+	if !*jwtOnly && *gitURL == "" {
 		panic("git-url is required")
 	}
 
@@ -67,6 +68,11 @@ func main() {
 	jwt, err := token.SignedString(pk)
 	if err != nil {
 		panic(err)
+	}
+
+	if *jwtOnly {
+		fmt.Println("jwt:", jwt)
+		return
 	}
 
 	// fmt.Println(tokenString)
