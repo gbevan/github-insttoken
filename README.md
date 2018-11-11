@@ -24,8 +24,8 @@ git clone https://x-access-token:v1.2a04[...snip...]5172@github.com/Organisation
 ```
 
 ## ISSUE: Via Proxy
-For some reason I get a 401 Unauthorized when attempting to resolve the JWT into
-an Installation Token when going via a proxy.  For now the workaround is to use
+If you get a 401 Unauthorized error attempting to resolve the JWT into
+an Installation Token when going via a proxy.  Use the workaround below with
 the `--jwt-only` option:
 ```bash
 ./github-insttoken --private-key-file YOURGITHUBAPP.2018-10-26.private-key.pem \
