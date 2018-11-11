@@ -75,10 +75,6 @@ func main() {
 		return
 	}
 
-	// fmt.Println(tokenString)
-
-	client := &http.Client{}
-
 	// Get Installation ID
 	insResp, err := reqGithub(
 		"GET",
