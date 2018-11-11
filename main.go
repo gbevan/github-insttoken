@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-	// user := flag.String("user", "", "User name to embed in the JWT")
 	privateKey := flag.String("private-key-file", "", "Path to file containing GitHub app private key PEM")
 	appIDStr := flag.String("app-id", "", "GitHub Application ID")
 	gitURL := flag.String("git-url", "https://api.github.com", "Github api base usr (ent: https://github.example.com/api/v3/)")
@@ -59,7 +58,7 @@ func main() {
 		// issued at time
 		"iat": time.Now().Unix(),
 		// expiration time - 10mins max
-		"exp": time.Now().Add(time.Minute * 10).Unix(),
+		"exp": time.Now().Add(time.Minute * 8).Unix(), // 8mins allows for clock skew 2 mins into the future
 		// GitHub App ID
 		"iss": appID,
 	})
@@ -70,44 +69,25 @@ func main() {
 		panic(err)
 	}
 
-	// // fmt.Println(tokenString)
-	// tr := &http.Transport{
-	// 	Proxy: http.ProxyFromEnvironment,
-	// 	DialContext: (&net.Dialer{
-	// 		Timeout:   30 * time.Second,
-	// 		KeepAlive: 30 * time.Second,
-	// 		DualStack: true,
-	// 	}).DialContext,
-	// 	MaxIdleConns:          100,
-	// 	IdleConnTimeout:       90 * time.Second,
-	// 	TLSHandshakeTimeout:   10 * time.Second,
-	// 	ExpectContinueTimeout: 1 * time.Second,
-	// }
-	// tr.ProxyConnectHeader = http.Header{}
-	// client := &http.Client{Transport: tr}
-
 	// Get Installation ID
 	insResp, err := reqGithub(
-		// client,
 		"GET",
-		fmt.Sprintf("%v/repos/%v/installation", *gitURL, *repo),
+		*gitURL,
+		fmt.Sprintf("/repos/%v/installation", *repo),
 		nil,
 		jwt,
-		// tr,
 	)
 	if err != nil {
 		panic(err)
 	}
-	// fmt.Println("insResp ID:", insResp["id"])
 
 	// Get Installation Token
 	insTokResp, err := reqGithub(
-		// client,
 		"POST",
-		fmt.Sprintf("%v/app/installations/%v/access_tokens", *gitURL, insResp["id"]),
+		*gitURL,
+		fmt.Sprintf("/app/installations/%v/access_tokens", insResp["id"]),
 		nil,
 		jwt,
-		// tr,
 	)
 	if err != nil {
 		panic(err)
@@ -115,8 +95,8 @@ func main() {
 	fmt.Println("token:", insTokResp["token"])
 }
 
-// func reqGithub(client *http.Client, method string, url string, postBody io.Reader, jwt string, tr *http.Transport) (map[string]interface{}, error) {
-func reqGithub(method string, url string, postBody io.Reader, jwt string) (map[string]interface{}, error) {
+func reqGithub(method string, gitURL string, path string, postBody io.Reader, jwt string) (map[string]interface{}, error) {
+	url := fmt.Sprintf("%v%v", gitURL, path)
 	req, err := http.NewRequest(method, url, postBody)
 	if err != nil {
 		return nil, err
@@ -133,22 +113,11 @@ func reqGithub(method string, url string, postBody io.Reader, jwt string) (map[s
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
-		// DisableCompression:    true,
 	}
-	// tr.ProxyConnectHeader = http.Header{}
 
 	req.Header.Set("Host", "github.dxc.com")
-	// req.Header.Set("Host", "GitHub.com")
 	req.Header.Set("Accept", "application/vnd.github.machine-man-preview+json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", jwt))
-
-	// proxy
-	// req.Header.Set("Proxy-Connection", "Keep-Alive")
-	// tr.ProxyConnectHeader.Set("Proxy-Connection", "Keep-Alive")
-
-	// force user-agent for proxy
-	// req.Header.Set("User-Agent", "Wget/1.9.1")
-	// tr.ProxyConnectHeader = req.Header
 
 	client := &http.Client{Transport: tr}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -164,8 +133,7 @@ func reqGithub(method string, url string, postBody io.Reader, jwt string) (map[s
 		fmt.Printf("Redirect header: %v\n", req.Header)
 		return nil
 	}
-	// fmt.Printf("req: %v\n", req)
-	fmt.Printf("req.Header: %v\n", req.Header)
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
